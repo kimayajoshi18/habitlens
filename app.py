@@ -32,6 +32,9 @@ if st.button("Save Today's Entry"):
 
     try:
         existing_data = pd.read_csv(csv_file)
+        # Remove any existing row for today's date
+        existing_data = existing_data[existing_data["date"] != str(today)]
+        # Add the new entry
         updated_data = pd.concat([existing_data, new_entry_df], ignore_index=True)
     except FileNotFoundError:
         updated_data = new_entry_df
