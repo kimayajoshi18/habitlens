@@ -32,12 +32,20 @@ if st.button("Save Today's Entry"):
 
     try:
         existing_data = pd.read_csv(csv_file)
-        # Remove any existing row for today's date
         existing_data = existing_data[existing_data["date"] != str(today)]
-        # Add the new entry
         updated_data = pd.concat([existing_data, new_entry_df], ignore_index=True)
     except FileNotFoundError:
         updated_data = new_entry_df
     
     updated_data.to_csv(csv_file, index=False)
     st.success("Today's habits saved successfully!")
+
+#Dashboard
+st.subheader("Saved Habit History")
+try:
+    habit_data = pd.read_csv(csv_file)
+    #most recent entry at top
+    habit_data = habit_data.sort_values(by="date", ascending=False)
+    st.dataframe(habit_data)
+except FileNotFoundError:
+    st.info("No habit data saved yet")
