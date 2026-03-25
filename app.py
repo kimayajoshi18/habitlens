@@ -1,5 +1,5 @@
 import streamlit as st
-from datetime import date 
+from datetime import date, timedelta
 import pandas as pd 
 
 st.set_page_config(page_title="HabitLens", page_icon="🧠", layout="wide")
@@ -48,6 +48,63 @@ if st.button("Save Today's Entry"):
     updated_data.to_csv(csv_file, index=False)
     st.success("Today's habits saved successfully!")
 
+st.divider()
+st.subheader("🧪 Sample Data Generator")
+st.caption("Creating realistic past habit data to test charts and behavior insights.")
+if st.button("✨ Generate 30 Days of Sample Data"):
+    sample_rows = []
+
+    # Load existing data if it exists
+    try:
+        existing_data = pd.read_csv(csv_file)
+        existing_dates = set(existing_data["date"].astype(str))
+    except FileNotFoundError:
+        existing_data = pd.DataFrame()
+        existing_dates = set()
+
+    # Generate last 30 days
+    for i in range(30):
+        sample_date = today - timedelta(days=i)
+        sample_date_str = str(sample_date)
+
+        # Skip if date already exists
+        if sample_date_str in existing_dates:
+            continue
+
+        weekday = sample_date.weekday()  # Monday=0, Sunday=6
+        is_weekend = weekday >= 5
+
+        # Realistic behavior patterns
+        gym = (not is_weekend and i % 3 != 0) or (is_weekend and i % 5 == 0)
+        studying = (not is_weekend and i % 4 != 0) or (is_weekend and i % 6 == 0)
+        sleep_goal = i % 4 != 0
+        ate_out = is_weekend or (i % 7 == 0)
+        ate_sweets = is_weekend or (i % 5 == 0)
+
+        sample_rows.append({
+            "date": sample_date_str,
+            "gym": gym,
+            "studying": studying,
+            "sleep_goal": sleep_goal,
+            "ate_out": ate_out,
+            "ate_sweets": ate_sweets
+        })
+
+    if sample_rows:
+        sample_df = pd.DataFrame(sample_rows)
+
+        if existing_data.empty:
+            sample_df.to_csv(csv_file, index=False)
+        else:
+            combined_data = pd.concat([existing_data, sample_df], ignore_index=True)
+            combined_data = combined_data.sort_values(by="date")
+            combined_data.to_csv(csv_file, index=False)
+
+        st.success(f"Added {len(sample_rows)} days of sample data!")
+    else:
+        st.info("All sample dates already exist. No new sample data added.")
+st.divider()
+
 #Dashboard
 st.subheader("📆 Saved Habit History")
 try:
@@ -57,6 +114,7 @@ try:
     st.dataframe(habit_data, width="stretch")
 except FileNotFoundError:
     st.info("No habit data saved yet.")
+st.divider()
 
 #Display metrics
 st.subheader("📊 Habit Dashboard Metrics")
