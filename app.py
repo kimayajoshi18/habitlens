@@ -142,3 +142,51 @@ try:
     st.write(f"**Total Days Tracked:** {total_days}")
 except FileNotFoundError:
     st.info("No habit data to display metrics yet.")
+
+st.divider()
+st.subheader("📈 Habit Visualizations")
+try:
+    habit_data = pd.read_csv(csv_file)
+    chart_data = pd.DataFrame({
+        "Habit": [
+            "Gym",
+            "Studying",
+            "Sleep Goal",
+            "No Sweets",
+            "No Eating Out"
+        ],
+        "Completion %": [
+            habit_data["gym"].mean() * 100,
+            habit_data["studying"].mean() * 100,
+            habit_data["sleep_goal"].mean() * 100,
+            (~habit_data["ate_sweets"]).mean() * 100,
+            (~habit_data["ate_out"]).mean() * 100
+        ]
+    })
+    st.write("### Overall Habit Completion Rates")
+    st.bar_chart(chart_data.set_index("Habit"))
+except FileNotFoundError:
+    st.info("No habit data available for charts yet.")
+
+try:
+    habit_data = pd.read_csv(csv_file)
+    habit_data["date"] = pd.to_datetime(habit_data["date"])
+    habit_data = habit_data.sort_values(by="date")
+
+    # Convert negative habits into positive behavior scores
+    habit_data["no_sweets"] = ~habit_data["ate_sweets"]
+    habit_data["no_eating_out"] = ~habit_data["ate_out"]
+
+    # Count how many positive habits were completed each day + score out of 5
+    habit_data["positive_habit_score"] = (
+        habit_data["gym"].astype(int) +
+        habit_data["studying"].astype(int) +
+        habit_data["sleep_goal"].astype(int) +
+        habit_data["no_sweets"].astype(int) +
+        habit_data["no_eating_out"].astype(int)
+    )
+    trend_data = habit_data[["date", "positive_habit_score"]].set_index("date")
+    st.write("### Daily Positive Habit Score Over Time")
+    st.line_chart(trend_data)
+except FileNotFoundError:
+    st.info("No habit data available for trend chart yet.")
