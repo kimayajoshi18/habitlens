@@ -2,23 +2,31 @@ import streamlit as st
 from datetime import date 
 import pandas as pd 
 
+st.set_page_config(page_title="HabitLens", page_icon="🧠", layout="wide")
+
 #Title
-st.title("HabitLens")
-st.write("Track your habits and discover behavior patterns over time!")
+st.title("🧠 HabitLens")
+st.subheader("Track your habits and discover behavior patterns over time!")
+st.divider()
 
 #Today's date
+st.subheader("📋 Daily Habit Check-In")
 today = date.today()
 csv_file = "data/habits.csv"
 st.subheader(f"Today's Entry: {today}")
 
 #Habits to be tracked
-gym = st.checkbox("Gym")
-study = st.checkbox("Studying")
-sleep = st.checkbox("Sleep Goal Met")
-ate_out = st.checkbox("Ate Out")
-ate_sweets = st.checkbox("Ate Sweets")
+col1, col2 = st.columns(2)
+with col1:
+    gym = st.checkbox("💪 Gym")
+    study = st.checkbox("📚 Studying")
+    sleep = st.checkbox("😴 Sleep goal met")
+with col2:
+    ate_out = st.checkbox("🍽️ Ate out")
+    ate_sweets = st.checkbox("🍭 Ate sweets")
 
 #Saving habits
+st.markdown("###")
 if st.button("Save Today's Entry"):
     new_entry = {
         "date": str(today),
@@ -41,17 +49,17 @@ if st.button("Save Today's Entry"):
     st.success("Today's habits saved successfully!")
 
 #Dashboard
-st.subheader("Saved Habit History")
+st.subheader("📆 Saved Habit History")
 try:
     habit_data = pd.read_csv(csv_file)
     #most recent entry at top
     habit_data = habit_data.sort_values(by="date", ascending=False)
-    st.dataframe(habit_data)
+    st.dataframe(habit_data, width="stretch")
 except FileNotFoundError:
     st.info("No habit data saved yet.")
 
 #Display metrics
-st.subheader("Habit Dashboard Metrics")
+st.subheader("📊 Habit Dashboard Metrics")
 
 try:
     habit_data = pd.read_csv(csv_file)
