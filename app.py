@@ -190,3 +190,69 @@ try:
     st.line_chart(trend_data)
 except FileNotFoundError:
     st.info("No habit data available for trend chart yet.")
+
+st.divider()
+st.subheader("🧐 Behavioral Insights")
+try:
+    habit_data = pd.read_csv(csv_file)
+
+    # Make sure date is datetime
+    habit_data["date"] = pd.to_datetime(habit_data["date"])
+
+    # Add weekday/weekend label
+    habit_data["is_weekend"] = habit_data["date"].dt.weekday >= 5
+
+    # Positive-framed habit completion rates
+    habit_rates = {
+        "Gym": habit_data["gym"].mean() * 100,
+        "Studying": habit_data["studying"].mean() * 100,
+        "Sleep Goal": habit_data["sleep_goal"].mean() * 100,
+        "No Sweets": (~habit_data["ate_sweets"]).mean() * 100,
+        "No Eating Out": (~habit_data["ate_out"]).mean() * 100
+    }
+
+    # Strongest and weakest habits
+    strongest_habit = max(habit_rates, key=habit_rates.get)
+    weakest_habit = min(habit_rates, key=habit_rates.get)
+
+    # Create a daily positive score for weekday/weekend comparison
+    habit_data["no_sweets"] = ~habit_data["ate_sweets"]
+    habit_data["no_eating_out"] = ~habit_data["ate_out"]
+
+    habit_data["positive_habit_score"] = (
+        habit_data["gym"].astype(int) +
+        habit_data["studying"].astype(int) +
+        habit_data["sleep_goal"].astype(int) +
+        habit_data["no_sweets"].astype(int) +
+        habit_data["no_eating_out"].astype(int)
+    )
+
+    weekday_avg = habit_data[~habit_data["is_weekend"]]["positive_habit_score"].mean()
+    weekend_avg = habit_data[habit_data["is_weekend"]]["positive_habit_score"].mean()
+
+    # Display insights
+    st.markdown(
+    f"<p style='font-size:22px;'>✅ <b>Strongest Habit:</b> {strongest_habit} ({habit_rates[strongest_habit]:.1f}%)</p>",
+    unsafe_allow_html=True
+    )
+    st.markdown(
+        f"<p style='font-size:22px;'>⚠️ <b>Habit to Improve:</b> {weakest_habit} ({habit_rates[weakest_habit]:.1f}%)</p>",
+        unsafe_allow_html=True
+    )
+    if weekday_avg > weekend_avg:
+        st.markdown(
+            "<p style='font-size:22px;'>📅 <b>Insight:</b> You tend to be more consistent on weekdays than weekends! Keep going!</p>",
+            unsafe_allow_html=True
+        )
+    elif weekend_avg > weekday_avg:
+        st.markdown(
+            "<p style='font-size:22px;'>🎉 <b>Insight:</b> You tend to be more consistent on weekends than weekdays. Keep at it!</p>",
+            unsafe_allow_html=True
+        )
+    else:
+        st.markdown(
+            "<p style='font-size:22px;'>⚖️ <b>Insight:</b> Your habits are equally consistent on weekdays and weekends! You're doing great!</p>",
+            unsafe_allow_html=True
+        )
+except FileNotFoundError:
+    st.info("No habit data available for insights yet.")
