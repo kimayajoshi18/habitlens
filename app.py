@@ -168,28 +168,47 @@ try:
 except FileNotFoundError:
     st.info("No habit data available for charts yet.")
 
+#weekend vs weekday consistency
 try:
     habit_data = pd.read_csv(csv_file)
     habit_data["date"] = pd.to_datetime(habit_data["date"])
-    habit_data = habit_data.sort_values(by="date")
 
-    # Convert negative habits into positive behavior scores
+    # Create positive versions of negative habits
     habit_data["no_sweets"] = ~habit_data["ate_sweets"]
     habit_data["no_eating_out"] = ~habit_data["ate_out"]
 
-    # Count how many positive habits were completed each day + score out of 5
-    habit_data["positive_habit_score"] = (
-        habit_data["gym"].astype(int) +
-        habit_data["studying"].astype(int) +
-        habit_data["sleep_goal"].astype(int) +
-        habit_data["no_sweets"].astype(int) +
-        habit_data["no_eating_out"].astype(int)
+    # Label each day as Weekday or Weekend
+    habit_data["day_type"] = habit_data["date"].dt.weekday.apply(
+        lambda x: "Weekend" if x >= 5 else "Weekday"
     )
-    trend_data = habit_data[["date", "positive_habit_score"]].set_index("date")
-    st.write("### Daily Positive Habit Score Over Time")
-    st.line_chart(trend_data)
+
+    # Daily consistency score out of 5, converted to %
+    habit_data["daily_consistency_pct"] = (
+        (
+            habit_data["gym"].astype(int) +
+            habit_data["studying"].astype(int) +
+            habit_data["sleep_goal"].astype(int) +
+            habit_data["no_sweets"].astype(int) +
+            habit_data["no_eating_out"].astype(int)
+        ) / 5
+    ) * 100
+
+    # Average by weekday/weekend
+    daytype_avg = habit_data.groupby("day_type")["daily_consistency_pct"].mean().reset_index()
+
+    # Make sure Weekday shows first
+    daytype_avg["day_type"] = pd.Categorical(
+        daytype_avg["day_type"],
+        categories=["Weekday", "Weekend"],
+        ordered=True
+    )
+    daytype_avg = daytype_avg.sort_values("day_type")
+
+    st.write("### Weekday vs Weekend Consistency")
+    st.bar_chart(daytype_avg.set_index("day_type"))
+
 except FileNotFoundError:
-    st.info("No habit data available for trend chart yet.")
+    st.info("No habit data available for weekday/weekend chart yet.")
 
 st.divider()
 st.subheader("🧐 Behavioral Insights")
