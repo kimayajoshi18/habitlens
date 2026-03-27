@@ -4,6 +4,35 @@ import pandas as pd
 
 st.set_page_config(page_title="HabitLens", page_icon="🧠", layout="wide")
 
+st.markdown("""
+<style>
+/* Buttons */
+.stButton>button {
+    background-color: #6C63FF;  /* Soft purple */
+    color: white;               /* Button text color */
+    border-radius: 12px;
+    padding: 8px 24px;
+    font-size: 16px;
+    font-weight: bold;
+}
+.stButton>button:hover {
+    background-color: #574fd6;  /* Darker purple on hover */
+}
+
+/* Streamlit Metrics cards */
+div[data-testid="stMetricValue"] {
+    font-size: 22px !important;
+    font-weight: bold !important;
+    color: #ffffff !important; /* Darker text to be visible */
+}
+div[data-testid="stMetricLabel"] {
+    font-size: 16px !important;
+    font-weight: bold !important;
+    color: #333 !important; /* Labels also darker */
+}
+</style>
+""", unsafe_allow_html=True)
+
 #Title
 st.title("🧠 HabitLens")
 st.subheader("Track your habits and discover behavior patterns over time!")
@@ -250,28 +279,52 @@ try:
     weekend_avg = habit_data[habit_data["is_weekend"]]["positive_habit_score"].mean()
 
     # Display insights
-    st.markdown(
-    f"<p style='font-size:22px;'>✅ <b>Strongest Habit:</b> {strongest_habit} ({habit_rates[strongest_habit]:.1f}%)</p>",
-    unsafe_allow_html=True
-    )
-    st.markdown(
-        f"<p style='font-size:22px;'>⚠️ <b>Habit to Improve:</b> {weakest_habit} ({habit_rates[weakest_habit]:.1f}%)</p>",
-        unsafe_allow_html=True
-    )
+    # Create the third insight message first
     if weekday_avg > weekend_avg:
-        st.markdown(
-            "<p style='font-size:22px;'>📅 <b>Insight:</b> You tend to be more consistent on weekdays than weekends! Keep going!</p>",
-            unsafe_allow_html=True
-        )
+        pattern_title = "📅 Weekday Strength"
+        pattern_text = "You tend to be more consistent on weekdays than weekends! Keep going!"
     elif weekend_avg > weekday_avg:
-        st.markdown(
-            "<p style='font-size:22px;'>🎉 <b>Insight:</b> You tend to be more consistent on weekends than weekdays. Keep at it!</p>",
-            unsafe_allow_html=True
-        )
+        pattern_title = "🎉 Weekend Strength"
+        pattern_text = "You tend to be more consistent on weekends than weekdays. Keep at it!"
     else:
-        st.markdown(
-            "<p style='font-size:22px;'>⚖️ <b>Insight:</b> Your habits are equally consistent on weekdays and weekends! You're doing great!</p>",
-            unsafe_allow_html=True
-        )
+        pattern_title = "⚖️ Balanced Pattern"
+        pattern_text = "Your habits are equally consistent on weekdays and weekends! You're doing great!"
+
+    # Display insight cards in columns with same height and black font
+    col1, col2, col3 = st.columns(3)
+
+    card_style = """
+        background-color:{bg_color};
+        padding:20px;
+        border-radius:16px;
+        min-height:200px;
+        color:black;
+    """
+
+    with col1:
+        st.markdown(f"""
+        <div style="{card_style.format(bg_color='#E8F8F0')}">
+            <h4 style="margin-bottom:10px;">✅ Strongest Habit</h4>
+            <p style="font-size:24px; font-weight:bold; margin-bottom:8px;">{strongest_habit}</p>
+            <p style="font-size:20px;">{habit_rates[strongest_habit]:.1f}% completion</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col2:
+        st.markdown(f"""
+        <div style="{card_style.format(bg_color='#FFF4E5')}">
+            <h4 style="margin-bottom:10px;">⚠️ Habit to Improve</h4>
+            <p style="font-size:24px; font-weight:bold; margin-bottom:8px;">{weakest_habit}</p>
+            <p style="font-size:20px;">{habit_rates[weakest_habit]:.1f}% completion</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col3:
+        st.markdown(f"""
+        <div style="{card_style.format(bg_color='#EAF3FF')}">
+            <h4 style="margin-bottom:10px;">{pattern_title}</h4>
+            <p style="font-size:19px; line-height:1.5;">{pattern_text}</p>
+        </div>
+        """, unsafe_allow_html=True)
 except FileNotFoundError:
     st.info("No habit data available for insights yet.")

@@ -4,7 +4,9 @@
         "dataframe",
         "daytype",
         "habitlens",
+        "lcbmhc",
         "Plotly",
-        "Streamlit"
+        "Streamlit",
+        "testid"
     ]
 }
